@@ -1,4 +1,4 @@
-district,info,latitude,longitude,count,update_date,update_year,update_month,lamp_addr,depth1,depth2,main_addr_no,sub_addr_no,latitude,longitude,address
+district,info,y,x,count,update_date,update_year,update_month,lamp_addr,depth1,depth2,main_addr_no,sub_addr_no,latitude,longitude,address
 관악구,A2021 1-1RZ 신림6배수지공원#01(삼성동 336-8),37.4682,126.9265,1,1,2022.0,12.0,,서울,관악구,336,8,,,서울 관악구 신림동 336-8
 관악구,A2022 1-1RZ 신림6배수지공원#02(삼성동 336-8),37.4683,126.9259,1,1,2022.0,12.0,,서울,관악구,336,8,,,서울 관악구 신림동 336-8
 관악구,A2024 1-1RZ 배수지공원(삼성동 1713-6),37.4633,126.9272,1,1,2022.0,12.0,,서울,관악구,1713,6,,,서울 관악구 신림동 1713-6
