@@ -60,45 +60,7 @@ def calculate_dist_from_any(latitude, longitude, df_any):
             df_dist = df_dist.append(row, ignore_index = True)
 
     return df_dist
-'''  
-#해당 지점으로부터 반경 1km 이내 있는 수와 위치 구하기
-def calculate_any(latitude, longitude, df_any):
 
-    df_dist = calculate_dist_from_any(latitude, longitude, df_any)
-
-    df_dist = df_dist.sort_values('dist')
-
-    n = 0
-
-    if 'road_addr' in df_any.columns:
-        addr = df_any['road_addr']
-    else:
-        addr = df_any['address']
-    
-    df_near = pd.DataFrame(
-    columns= ['count',
-              'addr', #도로명주소
-              'dist', #해당 지점으로부터 안심벨까지 거리
-              'lat',
-              'long'
-              ]
-    )
-
-    for ind in df_dist.index:
-        if df_dist['dist'][ind] < 1:
-            n += 1
-            row = {
-                'count': n,
-                'addr': addr, 
-                'dist': df_dist['dist'],
-                'lat': df_dist['lat'], 
-                'long': df_dist['long']
-            }
-
-            df_near = df_near.append(row, ignore_index=True)
-    
-    return df_near
-'''
 df_near = pd.DataFrame(
     columns = ['count','addr','distance','longitude','latitude(y)','type']
 )
