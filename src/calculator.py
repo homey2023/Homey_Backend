@@ -30,29 +30,38 @@ def getDistanceBetweenPointsNew(latitude1, longitude1, latitude2, longitude2, un
 
 # 비상벨, 유흥업소, 경찰관서, 안심이cctv, 여성 안심 택배함, 여성 안심지킴이집
 
-# 비상벨
 def calculate_dist_from_any(latitude, longitude, df_any):
 
     df_dist = pd.DataFrame(
-        columns = ['road_addr', 'lat','long','dist']
+        columns = ['count', 'addr', 'dist','long', 'lat']
     )
 
+    n = 0
     for ind in df_any.index:
         any_lat = df_any['y'][ind]
         any_long = df_any['x'][ind]
-        dist = getDistanceBetweenPointsNew(latitude, longitude, any_lat, any_long, unit = 'kilometers')
-        row = {
-            df_any['road_addr'],
-            any_lat,
-            any_long,
-            dist
-        }
+        if 'road_addr' in df_any.columns:
+            addr = df_any['road_addr'][ind]
+        else:
+            addr = df_any['address'][ind]
 
-        df_dist = df_dist.append(row, ignore_index = True)
+        dist = getDistanceBetweenPointsNew(latitude, longitude, any_lat, any_long, unit = 'kilometers')
+
+        if dist < 1: 
+            n += 1
+            row = {
+                'count': n,
+                'addr': addr,
+                'dist': dist,
+                'long': any_long,
+                'lat': any_lat
+            }
+
+            df_dist = df_dist.append(row, ignore_index = True)
 
     return df_dist
-    
-#해당 지점으로부터 반경 3km 이내 있는 안심벨 수와 위치 구하기
+'''  
+#해당 지점으로부터 반경 1km 이내 있는 수와 위치 구하기
 def calculate_any(latitude, longitude, df_any):
 
     df_dist = calculate_dist_from_any(latitude, longitude, df_any)
@@ -61,63 +70,81 @@ def calculate_any(latitude, longitude, df_any):
 
     n = 0
 
+    if 'road_addr' in df_any.columns:
+        addr = df_any['road_addr']
+    else:
+        addr = df_any['address']
+    
     df_near = pd.DataFrame(
-    columns= ['road_addr', #도로명주소
-              'addr',  #지번주소
-              'dist' #해당 지점으로부터 안심벨까지 거리
+    columns= ['count',
+              'addr', #도로명주소
+              'dist', #해당 지점으로부터 안심벨까지 거리
+              'lat',
+              'long'
               ]
     )
 
     for ind in df_dist.index:
-        if df_dist['distance'][ind] < 1:
+        if df_dist['dist'][ind] < 1:
             n += 1
             row = {
-                df_dist['any_road_addr'], 
-                df_dist['dist'],
-                df_dist['any_lat'], 
-                df_dist['any_long']
+                'count': n,
+                'addr': addr, 
+                'dist': df_dist['dist'],
+                'lat': df_dist['lat'], 
+                'long': df_dist['long']
             }
-    
-    return n, df_near
 
+            df_near = df_near.append(row, ignore_index=True)
+    
+    return df_near
+'''
 df_near = pd.DataFrame(
-    columns = ['emergency_bell', 'entertainment_establishments', 'police_office', 'cctv', 'women_protective_house', 'women_protective_parcel']
+    columns = ['count','addr','distance','longitude','latitude(y)','type']
 )
 
-def calculate_near(df):
-    long = df['x']
-    lat = df['y']
+def calculate_near(row):
+    long = row['x']
+    lat = row['y']
 
-    df_bell = pd.read_csv('Homey_Backend/dataset/emergency_bell/12_04_09_E_안전비상벨위치정보.csv')
-    
-    a, df_near_bell =calculate_any(lat, long, df_bell)
+    df_bell = pd.read_csv('Homey_Backend/dataset/emergency_bell/12_04_09_E_안전비상벨위치정보.csv')  
+    df_near_bell =calculate_dist_from_any(lat, long, df_bell)
+    df_near_bell['type'] = 'bell'
 
-    df_enterain = pd.read_csv('Homey_Backend/dataset/emergency_bell/gwanak_entertainment_establishments_v2.csv')
+    df_entertain = pd.read_csv('Homey_Backend\dataset\entertainment_establishments\gwanak_entertainment_establishments_v2.csv')
+    df_near_ent = calculate_dist_from_any(lat, long, df_entertain)
+    df_near_ent['type'] = 'entertain'
 
-    b, df_near_ent = calculate_any(lat, long, df_enterain)
+    df_police = pd.read_csv('Homey_Backend\dataset\police_office\preprocessed_police_office_v1.csv')
+    df_near_pol = calculate_dist_from_any(lat, long, df_police)
+    df_near_pol['type'] ='police'
 
-    df_police = pd.read_csv('Homey_Backend/dataset/police_office/preprocessed_police_office_v1')
-
-    c, df_near_pol = calculate_any(lat, long, df_police)
-
-    df_cctv = pd.read_csv('Homey-Backend\Homey_Backend\dataset\seoul_ansimee_cctv\preprocessed_Gwanak-gu_cctv_addr.csv')
-
-    d, df_near_cctv = calculate_any(lat, long, df_cctv)
+    df_cctv = pd.read_csv('Homey_Backend\dataset\seoul_ansimee_cctv\preprocessed_Gwanak-gu_cctv_addr.csv')
+    df_near_cctv = calculate_dist_from_any(lat, long, df_cctv)
+    df_near_cctv['type'] = 'cctv'
 
     df_wom_prot_house = pd.read_csv('Homey_Backend\dataset\women_protective_house\preprocessed_women_protective_house_v1.csv')
+    df_near_prot_house = calculate_dist_from_any(lat, long,  df_wom_prot_house)
+    df_near_prot_house['type'] = 'women_protective_house'
 
-    e, df_near_prot_house = calculate_any(lat, long, df_cctv)
-    
+
     df_wom_prot_parcel = pd.read_csv('Homey_Backend\dataset\women_protective_parcel\preprocessed_women_protective_parcel_v1.csv')
+    df_near_prot_parcel = calculate_dist_from_any(lat, long, df_wom_prot_parcel)
+    df_near_prot_parcel['type'] = 'women_protective_parcel'
 
-    f, df_near_prot_parcel = calculate_any(lat, long, df_cctv)
-
-    row = {
-        a, b, c, d, e, f
-    }
-
-    df_near = df_near.append(row, ignore_index = True)
-
+    df_near = pd.concat([df_near_bell,df_near_ent,df_near_pol,df_near_cctv,df_near_prot_house,df_near_prot_parcel], axis = 0, ignore_index= True, )
+    #df_near = df_near.append(row, ignore_index = True)
+     
     return df_near
 
 
+
+
+df = pd.read_csv('df_sample.csv')
+for index, row in df.iterrows():
+    df_re2 = calculate_near(row)
+    df_re2.to_csv('df_result{}.csv'.format(index))
+    #print(df_re2)
+#df_re2 = calculate_near(df.iloc[0])
+#df_re2.to_csv('df_res2.csv', )
+#print(df_re2[:10])
